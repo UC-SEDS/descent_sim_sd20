@@ -1,3 +1,15 @@
+"""
+Author: Alex Stubbles
+
+Description: The Mission class takes initial conditions and all mission parameters then generates a numerical descent
+simulation.
+
+Details: The numerical simulation uses a Runge-Kutta 4 integrator for the numerical simulation until one of the breaking
+conditions have been met. The breaking conditions can only be set using the state vector in the simulation. The
+simulation will save the entire run as a ndarray and has plotting capabilities to visualize the velocity and position
+over time. The simulation is currently a 1D simulation that does not take crosswind into account. ***Creating a 2D
+Simulation in the same framework would be very useful for varying testing non-uniform crosswinds***
+"""
 import sympy as sy
 import numpy as np
 import matplotlib.pyplot as plt

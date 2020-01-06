@@ -1,7 +1,15 @@
+"""
+Author: Alex Stubbles
+
+Description: The Parachute class defines contains the drag and geometry of the parachute. The parachute class is called
+by the Mission class and used for numerical descent calculations. The Parachute class is setup in mission_chutes.py for
+each parachute considered for the mission. The parachute class can also be used for objects in freefall give that the
+CD and surface area are known.
+"""
 import numpy as np
 
 
-class parachute(object):
+class Parachute(object):
     def __init__(self, c_drag, surf_area):
         self.cd = c_drag
         self.S = surf_area

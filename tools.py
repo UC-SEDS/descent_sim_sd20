@@ -1,5 +1,5 @@
 def toslugs(mass, u):
-    """Convert lbm to slugs"""
+    """Convert to slugs"""
     if u is 'lb':
         return mass * 0.031081
     elif u is 'kg':
@@ -9,7 +9,7 @@ def toslugs(mass, u):
 
 
 def tofeet(x, u):
-    """Convert inches to feet"""
+    """Convert to feet"""
     if u is 'cm':
         return x / 2.54
     elif u is 'in':
