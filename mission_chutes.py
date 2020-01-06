@@ -27,7 +27,7 @@ certXXL = chute.Parachute(cd, None)
 certXXL.effective_area(17.0, toslugs(60.0, 'lb'), rho, g, update=True)
 
 ###################### Payload ######################
-cd = 0.5 + 0.3
+cd = 0.82 + 1.17
 diam = tofeet(7.5, 'in')
 pay_free = chute.Parachute(cd, None)
 pay_free.circular_area(diam, update=True)

@@ -1,18 +1,18 @@
-def toslugs(mass, u):
+def toslugs(x, u):
     """Convert to slugs"""
-    if u is 'lb':
-        return mass * 0.031081
-    elif u is 'kg':
-        return mass * 0.06852177
-    else:
-        raise Exception("Unrecognized units")
+    cnst = {'lb': 0.031081,
+            'kg': 0.06852177}
+    try:
+        return x*cnst[u]
+    except KeyError:
+        raise Exception("Unrecognized units (toslugs)")
 
 
 def tofeet(x, u):
     """Convert to feet"""
-    if u is 'cm':
-        return x / 2.54
-    elif u is 'in':
-        return x / 12.0
-    else:
-        raise Exception("Unrecognized units")
+    cnst = {'cm': 1.0 / 2.54,
+            'in': 1.0 / 12.0}
+    try:
+        return x * cnst[u]
+    except KeyError:
+        raise Exception("Unrecognized units (tofeet)")

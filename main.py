@@ -9,15 +9,17 @@ rocket_mission = rocket_setup()
 pay_mission = payload_setup()
 
 
-# setup the missions
+# setup the missions class for each independent section
 rocket = Mission(rocket_mission)
-rocket.run_mission()
-rocket.results("Rocket", masses=[toslugs(14.2, 'lb'), toslugs(17.6, 'lb')])
-
 payload = Mission(pay_mission)
-payload.run_mission()
-payload.results("Payload", masses=[toslugs(5.795, 'lb'), toslugs(1.875, 'lb')])
 
+# run simulation
+rocket.run_mission()
+payload.run_mission()
+
+# Print results to console
+rocket.results("Rocket", masses=[toslugs(14.2, 'lb'), toslugs(17.6, 'lb')])
+payload.results("Payload", masses=[toslugs(5.795, 'lb'), toslugs(1.875, 'lb')])
 
 # Plotting results
 plt.figure(1)
