@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 
 class Mission(object):
     def __init__(self, mission):
-        n_phases, initial_state, time_step, break_alt, masses, chutes, max_time, max_ke = mission
+        n_phases, initial_state, time_step, break_alt, masses, chutes, wind_speed, max_time, max_ke = mission
         assert n_phases == len(break_alt) == len(masses)
-        self.__as = 0
-        self.__vs = 1
+        self.__as = 1 # the element in the state vector that holds the altitude
+        self.__vs = 3 # the element in the state vector that holds the y velocity
         self.n = n_phases
         self.dt = time_step
         self.time_lim = max_time
@@ -28,8 +28,9 @@ class Mission(object):
         self.equ = []
         self.state = initial_state
         self.mass = masses
+        self.v_o = wind_speed
         for i in range(n_phases):
-            self.equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd))
+            self.equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd, self.wind_grad))
 
         self.path = None
         self.time = None
@@ -79,19 +80,24 @@ class Mission(object):
                 print("*********************************************")
         print()
         return
-
+# TODO: add wind gradient function
     @staticmethod
-    def make_equ(mass, area, c_d):
-        r_y, v_y = sy.symbols("r_y, v_y")
+    def make_equ(mass, area, c_d, wind_fnc):
+        x, y, u, v = sy.symbols("x, y, u, v")
+        wind = wind_fnc(y)
         g = 32.17405
         rho = 0.0023769
-        d_r_y = v_y
+        theta = sy.atan2(v, u + wind)
+        vel_abs = sy.sqrt((u + wind) ** 2 + v ** 2)
+        drag = (c_d * 0.5 * rho * area * vel_abs ** 2) / mass
 
-        d_v_drag = (c_d * 0.5 * rho * area * v_y ** 2) / mass
-        d_v_y = d_v_drag - g
+        d_x = u
+        d_y = v
+        d_u = drag * sy.cos(theta)
+        d_v = drag * sy.sin(theta) - g
 
-        var = [r_y, v_y]
-        equs = sy.Matrix([d_r_y, d_v_y])
+        var = [x, y, u, v]
+        equs = sy.Matrix([d_x, d_y, d_u, d_v])
         l_equ = sy.lambdify([var], equs)
         return l_equ
 
@@ -151,3 +157,6 @@ class Mission(object):
     @staticmethod
     def ke2vel(ke, m):
         return np.sqrt(ke*2.0/m)
+
+    def wind_grad(self, h):
+        return self.v_o * np.log(h/0.3) / np.log(10/0.3)
