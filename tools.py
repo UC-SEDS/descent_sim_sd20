@@ -16,3 +16,10 @@ def tofeet(x, u):
         return x * cnst[u]
     except KeyError:
         raise Exception("Unrecognized units (tofeet)")
+
+def tofps(x, u):
+    cnst = {'mph': 1.4667}
+    try:
+        return x * cnst[u]
+    except KeyError:
+        raise Exception("Unrecognized units (tofps)")

@@ -18,8 +18,8 @@ class Mission(object):
     def __init__(self, mission):
         n_phases, initial_state, time_step, break_alt, masses, chutes, wind_speed, max_time, max_ke = mission
         assert n_phases == len(break_alt) == len(masses)
-        self.__as = 1 # the element in the state vector that holds the altitude
-        self.__vs = 3 # the element in the state vector that holds the y velocity
+        self.__as = 1  # the element in the state vector that holds the altitude
+        self.__vs = 3  # the element in the state vector that holds the y velocity
         self.n = n_phases
         self.dt = time_step
         self.time_lim = max_time
@@ -30,7 +30,7 @@ class Mission(object):
         self.mass = masses
         self.v_o = wind_speed
         for i in range(n_phases):
-            self.equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd, self.wind_grad))
+            self.equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd, self.v_o))
 
         self.path = None
         self.time = None
@@ -82,16 +82,16 @@ class Mission(object):
         return
 # TODO: add wind gradient function
     @staticmethod
-    def make_equ(mass, area, c_d, wind_fnc):
-        x, y, u, v = sy.symbols("x, y, u, v")
-        wind = wind_fnc(y)
+    def make_equ(mass, area, c_d, v_o):
+        x, y, u, v = sy.symbols("x, y, u, v", real=True)
+        wind = v_o * sy.log(y/0.3) / sy.log(10/0.3)
         g = 32.17405
         rho = 0.0023769
         theta = sy.atan2(v, u + wind)
         vel_abs = sy.sqrt((u + wind) ** 2 + v ** 2)
         drag = (c_d * 0.5 * rho * area * vel_abs ** 2) / mass
 
-        d_x = u
+        d_x = u + wind
         d_y = v
         d_u = drag * sy.cos(theta)
         d_v = drag * sy.sin(theta) - g
@@ -158,5 +158,5 @@ class Mission(object):
     def ke2vel(ke, m):
         return np.sqrt(ke*2.0/m)
 
-    def wind_grad(self, h):
-        return self.v_o * np.log(h/0.3) / np.log(10/0.3)
+    # def wind_grad(self, h):
+    #     return self.v_o * np.log(h/0.3) / np.log(10/0.3)
