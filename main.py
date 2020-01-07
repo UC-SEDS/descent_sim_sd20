@@ -3,7 +3,7 @@ from mission import Mission
 from payload_setup import payload_setup
 from rocket_setup import rocket_setup
 import matplotlib.pyplot as plt
-# TODO: setup a 2d test
+
 # call mission setups
 rocket_mission = rocket_setup()
 pay_mission = payload_setup()

@@ -84,7 +84,9 @@ class Mission(object):
         print("Drift distance with {0:.2f} fps wind: {1:.2f} ft".format(self.v_o, self.yf[0]))
         print()
         return
-# TODO: add wind gradient function
+
+# TODO: test wind turbine wind gradient function
+
     @staticmethod
     def make_equ(mass, area, c_d, v_o):
         x, y, u, v = sy.symbols("x, y, u, v", real=True)
@@ -177,6 +179,3 @@ class Mission(object):
     @staticmethod
     def ke2vel(ke, m):
         return np.sqrt(ke*2.0/m)
-
-    # def wind_grad(self, h):
-    #     return self.v_o * np.log(h/0.3) / np.log(10/0.3)
