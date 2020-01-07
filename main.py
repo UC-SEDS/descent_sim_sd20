@@ -23,7 +23,7 @@ rocket.results("Rocket", masses=[toslugs(14.2, 'lb'), toslugs(17.6, 'lb')])
 
 # # Plotting results
 # plt.figure(1)
-# rocket.plot_path("Rocket Path")
+rocket.plot_path("Rocket Path")
 # # payload.plot_path("Payload Path")
 # plt.legend()
 #

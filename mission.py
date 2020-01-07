@@ -58,17 +58,19 @@ class Mission(object):
     def results(self, name="", **kwargs):
         print("-------------------- {0:s} --------------------".format(str(name)))
         print("Time of descent: {0:.2f}".format(self.tf))
+        print()
         try:
             over_time = min(np.where(self.time > self.time_lim)[0])
             print("*** Altitude where max time is exceeded: {0:.2f} ft ***".format(self.path[over_time, self.__as]))
         except ValueError:
             pass
-        print("Velocity of final descent: {0:.2f} ft/s".format(abs(self.yf[1])))
+        print("Velocity of final descent: {0:.2f} ft/s".format(abs(self.yf[self.__vs])))
+        print()
         if 'masses' in kwargs:
             i = 0
             for m in kwargs["masses"]:
                 i += 1
-                ke = self.kinetic_energy(self.yf[1], m)
+                ke = self.kinetic_energy(self.yf[self.__vs], m)
                 print("Kinetic Energy section {0} on touchdown: {1:.2f} ft lbs".format(i, ke))
                 if ke > self.ke_lim:
                     print("*** Kinetic energy section {0} Exceeded by: {1:.2f} ft lbs ***".format(i, ke - self.ke_lim))
@@ -78,6 +80,8 @@ class Mission(object):
                 print("*********************************************")
                 print("Kinetic energy Exceeded by: {0:.2f} ft lbs".format(self.ke - self.ke_lim))
                 print("*********************************************")
+        print()
+        print("Drift distance with {0:.2f} fps wind: {1:.2f} ft".format(self.v_o, self.yf[0]))
         print()
         return
 # TODO: add wind gradient function
@@ -93,8 +97,8 @@ class Mission(object):
 
         d_x = u + wind
         d_y = v
-        d_u = drag * sy.cos(theta)
-        d_v = drag * sy.sin(theta) - g
+        d_u = -drag * sy.cos(theta)
+        d_v = -drag * sy.sin(theta) - g
 
         var = [x, y, u, v]
         equs = sy.Matrix([d_x, d_y, d_u, d_v])
@@ -117,14 +121,22 @@ class Mission(object):
         s = self.__as
         return y[s] > bc
 
-    def plot_path(self, label=""):
+    def plot_tvalt(self, label=""):
         x = self.time
-        y = self.path[:, 0]
+        y = self.path[:, self.__as]
         plt.scatter(self.time_lim, 0, label="Time limit")
         plt.scatter(self.tf, 0, c="BLACK", marker="x")
         plt.plot(x, y, label=label)
-        plt.title("Altitude Plot")
+        plt.title("Altitude vs Time Plot")
         plt.xlabel("Time (sec)")
+        plt.ylabel("Altitude (ft)")
+
+    def plot_path(self, label=""):
+        x = self.path[:, 0]
+        y = self.path[:, self.__as]
+        plt.plot(x, y, label=label)
+        plt.title("X,Y Path Plot")
+        plt.xlabel("Drift (ft)")
         plt.ylabel("Altitude (ft)")
 
     def plot_vel(self, label=""):
