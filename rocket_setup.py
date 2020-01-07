@@ -2,6 +2,7 @@ from mission_chutes import drogue_chutes, main_chutes
 import numpy as np
 from tools import toslugs, tofps
 
+
 def rocket_setup():
     # import parachutes
     drogue = drogue_chutes['24']
@@ -18,5 +19,5 @@ def rocket_setup():
     mass = [toslugs(32.0, 'lb'), toslugs(32.0, 'lb')]  # mass for each phase
     bc = [500.0, 1.0]  # altitude breaking conditions
     chutes = [drogue, main]  # parachute used for each phase
-    wind_speed = tofps(20, 'mph')
+    wind_speed = tofps(10, 'mph')
     return [phases, initial_state, dt, bc, mass, chutes, wind_speed, max_time, max_ke]

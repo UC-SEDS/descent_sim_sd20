@@ -95,7 +95,7 @@ class Mission(object):
         vel_abs = sy.sqrt((u + wind) ** 2 + v ** 2)
         drag = (c_d * 0.5 * rho * area * vel_abs ** 2) / mass
 
-        d_x = u + wind
+        d_x = -u
         d_y = v
         d_u = -drag * sy.cos(theta)
         d_v = -drag * sy.sin(theta) - g
@@ -135,19 +135,27 @@ class Mission(object):
         x = self.path[:, 0]
         y = self.path[:, self.__as]
         plt.plot(x, y, label=label)
-        plt.title("X,Y Path Plot")
+        plt.title("Path Plot")
         plt.xlabel("Drift (ft)")
         plt.ylabel("Altitude (ft)")
 
-    def plot_vel(self, label=""):
+    def plot_vel_fall(self, label=""):
         x = self.time
-        y = -self.path[:, 1]
+        y = -self.path[:, self.__vs]
         plt.scatter(self.tf, self.ke2vel(self.ke_lim, self.mass[-1]), label="Velocity limit")
-        plt.scatter(self.tf, -self.yf[1], c="BLACK", marker="x")
+        plt.scatter(self.tf, -self.yf[self.__vs], c="BLACK", marker="x")
         plt.plot(x, y, label=label)
-        plt.title("Velocity Plot")
+        plt.title("Fall Velocity Plot")
         plt.xlabel("Time (sec)")
         plt.ylabel("Velocity (ft/s)")
+
+    def plot_vel_drft(self, label=""):
+        x = -self.path[:, 2]
+        y = self.path[:, self.__as]
+        plt.plot(x, y, label=label)
+        plt.title("Drift Velocity Plot")
+        plt.xlabel("Velocity (ft/s)")
+        plt.ylabel("Altitude (ft)")
 
     @staticmethod
     def rk4(yn, f, h):

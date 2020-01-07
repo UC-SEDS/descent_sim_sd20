@@ -1,6 +1,6 @@
 from mission_chutes import payload_chutes
 import numpy as np
-from tools import toslugs, tofeet
+from tools import toslugs, tofps
 
 def payload_setup():
     # Constraints
@@ -12,7 +12,7 @@ def payload_setup():
     fall = payload_chutes['freefall']
 
     # Rocket mission
-    initial_state = np.array([4000.0, 0.0])
+    initial_state = np.array([0.0, 4000.0, 0.0, -0.01])
     phases = 3
     # set up mission parameters
     m_drone = toslugs(1.57, 'lb')
@@ -22,6 +22,7 @@ def payload_setup():
     m_pay_empty = m_can + m_nose
     dt = [0.01, 0.01, 0.01]  # time step for each phase
     mass = [m_pay, m_pay, m_pay_empty]  # mass for each phase
-    bc = [600.0, 400, 0.0]  # altitude breaking conditions
+    bc = [600.0, 400, 1.0]  # altitude breaking conditions
     chutes = [fall, pay, pay]  # parachute used for each phase
-    return [phases, initial_state, dt, bc, mass, chutes, max_time, max_ke]
+    wind_speed = tofps(10, 'mph')
+    return [phases, initial_state, dt, bc, mass, chutes, wind_speed, max_time, max_ke]
