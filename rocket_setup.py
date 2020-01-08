@@ -15,7 +15,10 @@ def rocket_setup():
     phases = 2
     # set up mission parameters
     dt = [0.01, 0.01]  # time step for each phase
-    mass = [toslugs(32.0, 'lb'), toslugs(32.0, 'lb')]  # mass for each phase
+    mid_section = toslugs(17.81, 'lb')
+    aft_section = toslugs(19.3, 'lb')
+    rocket = mid_section + aft_section
+    mass = [rocket, rocket]  # mass for each phase
     bc = [500.0, 0.0]  # altitude breaking conditions
     chutes = [drogue, main]  # parachute used for each phase
     return [phases, initial_state, dt, bc, mass, chutes, max_time, max_ke]

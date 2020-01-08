@@ -18,7 +18,9 @@ rocket.run_mission()
 payload.run_mission()
 
 # Print results to console
-rocket.results("Rocket", masses=[toslugs(14.2, 'lb'), toslugs(17.6, 'lb')])
+mid_section = toslugs(17.81, 'lb')
+aft_section = toslugs(19.3, 'lb')
+rocket.results("Rocket", masses=[mid_section, aft_section])
 payload.results("Payload", masses=[toslugs(5.795, 'lb'), toslugs(1.875, 'lb')])
 
 # Plotting results
