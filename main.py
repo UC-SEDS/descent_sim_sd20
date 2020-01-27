@@ -4,6 +4,9 @@ from setup.payload_setup import payload_setup
 from setup.rocket_setup import rocket_setup
 import matplotlib.pyplot as plt
 
+# TODO: Test the variance of the simulation using different time steps [1.0, 0.1, 0.01, 0.001]
+# TODO: Save all data at the end of each phase including time and kinetic energy
+
 # call mission setups
 rocket_mission = rocket_setup()
 pay_mission = payload_setup()
