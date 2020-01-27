@@ -1,6 +1,7 @@
-from mission_chutes import drogue_chutes, main_chutes
+from setup.mission_chutes import drogue_chutes, main_chutes
 import numpy as np
-from tools import toslugs, tofeet
+from tools import toslugs
+
 
 def rocket_setup():
     # import parachutes
@@ -17,7 +18,7 @@ def rocket_setup():
     dt = [0.01, 0.01]  # time step for each phase
     mid_section = toslugs(17.81, 'lb')
     aft_section = toslugs(19.3, 'lb')
-    rocket = mid_section + aft_section
+    rocket = mid_section + aft_section  # total rocket mass
     mass = [rocket, rocket]  # mass for each phase
     bc = [500.0, 0.0]  # altitude breaking conditions
     chutes = [drogue, main]  # parachute used for each phase

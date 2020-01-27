@@ -1,6 +1,7 @@
-from mission_chutes import payload_chutes
+from setup.mission_chutes import payload_chutes
 import numpy as np
-from tools import toslugs, tofeet
+from tools import toslugs
+
 
 def payload_setup():
     # Constraints

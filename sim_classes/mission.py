@@ -14,8 +14,15 @@ import sympy as sy
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Mission(object):
     def __init__(self, mission):
+        """
+        This class is given mission parameters and initial conditions of the simulation to set up the equations of
+        motion. The equations of motion are then evaluated using numerical integration until breaking conditions
+        are achieved. The method run_mission() is called after initialization of the Mission class.
+        :param mission: list of initial parameters that is returned by running the function in XXX_setup.py.
+        """
         n_phases, initial_state, time_step, break_alt, masses, chutes, max_time, max_ke = mission
         assert n_phases == len(break_alt) == len(masses)
         self.__as = 0
@@ -38,6 +45,12 @@ class Mission(object):
         self.yf = None
 
     def run_mission(self):
+        """
+        Evaluates all phases of the mission iteratively. The mission will run until the breaking conditions have been
+        met whis is defined as part of the classes initialization. The integration can be cut into multiple phases with
+        the final state vector is the initial state vector for the next phase.
+        :return:
+        """
         y = self.state
         time = np.array([0])
         state = y
@@ -55,6 +68,13 @@ class Mission(object):
         return state, time
 
     def results(self, name="", **kwargs):
+        """
+        This returns the results of the mission that was evaluated using run_mission()
+        :param name: name of the section being simulated
+        :param kwargs:
+            mass: list of masses (this is if a section was split but tethered)
+        :return:
+        """
         print("-------------------- {0:s} --------------------".format(str(name)))
         print("Time of descent: {0:.2f}".format(self.tf))
         try:
@@ -82,6 +102,14 @@ class Mission(object):
 
     @staticmethod
     def make_equ(mass, area, c_d):
+        """
+        Using symbolics to derive the equations of motion for each falling section with a given mass, area, and
+        coefficient of drag
+        :param mass: list of masses for each phase of descent
+        :param area: list of reference area for each phase
+        :param c_d: list of drag coefficients for each phase
+        :return: function that will input a ndarray state vector and return the time derivative
+        """
         r_y, v_y = sy.symbols("r_y, v_y")
         g = 32.17405
         rho = 0.0023769
@@ -96,6 +124,17 @@ class Mission(object):
         return l_equ
 
     def sim(self, y_i, dt, func, phase):
+        """
+        Evaluates the equations of motion using numerical integration. The integration method chosen is the
+        Runge-Kutta 4 integrator.
+        :param y_i: initial state vector
+        :param dt: time step for that phase
+        :param func: The equations of motion
+        :param phase: The current phase that is being run
+        :return:
+            results: ndarray of all state vectors for the entire descent.
+            time: ndarray of the time which each state vector correlates with.
+        """
         y = y_i
         results = []
         it = 0
@@ -108,10 +147,21 @@ class Mission(object):
         return results, time
 
     def bcon(self, y, bc):
+        """
+        This evaluates whether the breaking conditions have been met.
+        :param y: The current state vector
+        :param bc: The breaking condition being evaluated
+        :return: bool
+        """
         s = self.__as
         return y[s] > bc
 
     def plot_path(self, label=""):
+        """
+        Plots the altitude over time of descent
+        :param label: Label of the object descending
+        :return: None
+        """
         x = self.time
         y = self.path[:, 0]
         plt.scatter(self.time_lim, 0, label="Time limit")
@@ -122,6 +172,11 @@ class Mission(object):
         plt.ylabel("Altitude (ft)")
 
     def plot_vel(self, label=""):
+        """
+        Plots velocity over time of descent
+        :param label: Label of the object descending
+        :return: None
+        """
         x = self.time
         y = -self.path[:, 1]
         plt.scatter(self.tf, self.ke2vel(self.ke_lim, self.mass[-1]), label="Velocity limit")
@@ -133,6 +188,13 @@ class Mission(object):
 
     @staticmethod
     def rk4(yn, f, h):
+        """
+        Runge-Kutta 4 integrator which integrates over the time step h
+        :param yn: the current state vector
+        :param f: The function for the state vector that takes the current state vector as the input
+        :param h: Time step to integrate over
+        :return: The change in state vector over the time step h
+        """
         shp = yn.shape
         yn = yn.flatten()
         k1 = (f(yn) * h).flatten()
@@ -146,8 +208,20 @@ class Mission(object):
 
     @staticmethod
     def kinetic_energy(v, m):
+        """
+        Calculate the kinetic energy given velocity and mass
+        :param v: velocity
+        :param m: mass
+        :return: kinetic energy
+        """
         return 0.5 * m * v ** 2
 
     @staticmethod
     def ke2vel(ke, m):
+        """
+        Given kinetic energy and mass the velocity is calculated
+        :param ke: Kinetic energy
+        :param m: mass
+        :return: velocity
+        """
         return np.sqrt(ke*2.0/m)

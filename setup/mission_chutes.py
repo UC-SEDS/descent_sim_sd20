@@ -1,10 +1,17 @@
-import chute
+from sim_classes import chute
 from tools import tofeet, toslugs
 
 g = 32.17405
 rho = 0.0023769
 
 # Defining Parachutes
+
+# Example format
+# drag_coefficient = xxx
+# reference_area = yyy
+# parachute = chute.Parachute(drag_coefficient, reference_area)
+
+# To find surface area call Parachute.circular_area() or Parachute.effective_area()
 
 ###################### Drogues ######################
 diam = tofeet(24.0, 'in')  # ft

@@ -1,7 +1,7 @@
-from tools import toslugs, tofeet
-from mission import Mission
-from payload_setup import payload_setup
-from rocket_setup import rocket_setup
+from tools import toslugs
+from sim_classes.mission import Mission
+from setup.payload_setup import payload_setup
+from setup.rocket_setup import rocket_setup
 import matplotlib.pyplot as plt
 
 # call mission setups
