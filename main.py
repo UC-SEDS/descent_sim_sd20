@@ -22,9 +22,11 @@ payload.run_mission()
 
 # Print results to console
 mid_section = toslugs(17.81, 'lb')
-aft_section = toslugs(19.3, 'lb')
+aft_section = toslugs(14.67 + 4.06, 'lb')
+full_pay_section = toslugs(9.34, 'lb')
+nose_section = toslugs(2.4, 'lb')
 rocket.results("Rocket", masses=[mid_section, aft_section])
-payload.results("Payload", masses=[toslugs(5.795, 'lb'), toslugs(1.875, 'lb')])
+payload.results("Payload", masses=[full_pay_section, nose_section])
 
 # Plotting results
 plt.figure(1)
