@@ -15,6 +15,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class Results(object):
+    def __init__(self):
+        self.path = []
+        self.time = []
+        self.ke = []
+        self.pos = []
+        self.vel = []
+        self.pos_final = []
+        self.vel_final = []
+
+
 class Mission(object):
     def __init__(self, mission):
         """
@@ -27,101 +38,55 @@ class Mission(object):
         assert n_phases == len(break_alt) == len(masses)
         self.__as = 0
         self.__vs = 1
-        self.n = n_phases
+        self.__equ = []
+        self.__state = initial_state
+        self.__n = n_phases
         self.dt = time_step
         self.time_lim = max_time
         self.ke_lim = max_ke
         self.phase = break_alt
-        self.equ = []
-        self.state = initial_state
+
         self.mass = masses
         for i in range(n_phases):
-            self.equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd))
+            self.__equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd))
+        self.results = Results()
 
-        self.path = None
-        self.time = None
-        self.ke = None
-        self.tf = None
-        self.yf = None
-
-    def run_mission(self):
+    def run_mission(self, split=None):
         """
         Evaluates all phases of the mission iteratively. The mission will run until the breaking conditions have been
-        met whis is defined as part of the classes initialization. The integration can be cut into multiple phases with
+        met which is defined as part of the classes initialization. The integration can be cut into multiple phases with
         the final state vector is the initial state vector for the next phase.
         :return:
         """
-        y = self.state
+        if split is not None:
+            mass = self.mass
+        else:
+            assert isinstance(split, list), "This must be a list of ndarrays"
+            for element in split:
+                assert isinstance(element, np.ndarray), "This must be a list of ndarrays"
+            assert len(split) == self.phase, "List must have the same length as the number of phases"
+            mass = split
+        y = self.__state
         time = np.array([0])
         state = y
         state = state.reshape((1, len(y)))
-        for i in range(self.n):
-            y, t = self.sim(y, self.dt[i], self.equ[i], i)
+        for i in range(self.__n):
+            y, t = self.sim(y, self.dt[i], self.__equ[i], i)
+            self.results.path.append(y)
+            self.results.pos.append(y[:, self.__as])
+            self.results.vel.append(y[:, self.__vs])
+            self.results.pos_final.append(y[-1, self.__as])
+            self.results.vel_final.append(y[-1, self.__vs])
+            self.results.time.append(t)
+            self.results.ke.append(self.kinetic_energy(self.results.path[i][-1, self.__vs], mass[i]))
             time = np.append(time, t + time[-1])
             state = np.append(state, y, axis=0)
             y = y[-1, :]
-        self.path = state
-        self.time = time
-        self.tf = time[-1]
-        self.yf = self.path[-1, :]
-        self.ke = self.kinetic_energy(self.path[-1, self.__vs], self.mass[-1])
+        self.results.path.insert(0, state)
+        self.results.time.insert(0, time)
+        self.results.pos.insert(0, self.results.path[0][:, self.__as])
+        self.results.vel.insert(0, self.results.path[0][:, self.__vs])
         return state, time
-
-    def results(self, name="", **kwargs):
-        """
-        This returns the results of the mission that was evaluated using run_mission()
-        :param name: name of the section being simulated
-        :param kwargs:
-            mass: list of masses (this is if a section was split but tethered)
-        :return:
-        """
-        print("-------------------- {0:s} --------------------".format(str(name)))
-        print("Time of descent: {0:.2f}".format(self.tf))
-        try:
-            over_time = min(np.where(self.time > self.time_lim)[0])
-            print("*** Altitude where max time is exceeded: {0:.2f} ft ***".format(self.path[over_time, self.__as]))
-        except ValueError:
-            pass
-        print("Velocity of final descent: {0:.2f} ft/s".format(abs(self.yf[1])))
-        if 'masses' in kwargs:
-            i = 0
-            for m in kwargs["masses"]:
-                i += 1
-                ke = self.kinetic_energy(self.yf[1], m)
-                print("Kinetic Energy section {0} on touchdown: {1:.2f} ft lbs".format(i, ke))
-                if ke > self.ke_lim:
-                    print("*** Kinetic energy section {0} Exceeded by: {1:.2f} ft lbs ***".format(i, ke - self.ke_lim))
-        else:
-            print("Kinetic Energy on touchdown: {0:.2f} ft lbs".format(self.ke))
-            if self.ke > self.ke_lim:
-                print("*********************************************")
-                print("Kinetic energy Exceeded by: {0:.2f} ft lbs".format(self.ke - self.ke_lim))
-                print("*********************************************")
-        print()
-        return
-
-    @staticmethod
-    def make_equ(mass, area, c_d):
-        """
-        Using symbolics to derive the equations of motion for each falling section with a given mass, area, and
-        coefficient of drag
-        :param mass: list of masses for each phase of descent
-        :param area: list of reference area for each phase
-        :param c_d: list of drag coefficients for each phase
-        :return: function that will input a ndarray state vector and return the time derivative
-        """
-        r_y, v_y = sy.symbols("r_y, v_y")
-        g = 32.17405
-        rho = 0.0023769
-        d_r_y = v_y
-
-        d_v_drag = (c_d * 0.5 * rho * area * v_y ** 2) / mass
-        d_v_y = d_v_drag - g
-
-        var = [r_y, v_y]
-        equs = sy.Matrix([d_r_y, d_v_y])
-        l_equ = sy.lambdify([var], equs)
-        return l_equ
 
     def sim(self, y_i, dt, func, phase):
         """
@@ -146,6 +111,29 @@ class Mission(object):
         time = np.arange(it) * dt
         return results, time
 
+    @staticmethod
+    def make_equ(mass, area, c_d):
+        """
+        Using symbolics to derive the equations of motion for each falling section with a given mass, area, and
+        coefficient of drag
+        :param mass: list of masses for each phase of descent
+        :param area: list of reference area for each phase
+        :param c_d: list of drag coefficients for each phase
+        :return: function that will input a ndarray state vector and return the time derivative
+        """
+        r_y, v_y = sy.symbols("r_y, v_y")
+        g = 32.17405
+        rho = 0.0023769
+        d_r_y = v_y
+
+        d_v_drag = (c_d * 0.5 * rho * area * v_y ** 2) / mass
+        d_v_y = d_v_drag - g
+
+        var = [r_y, v_y]
+        equs = sy.Matrix([d_r_y, d_v_y])
+        l_equ = sy.lambdify([var], equs)
+        return l_equ
+
     def bcon(self, y, bc):
         """
         This evaluates whether the breaking conditions have been met.
@@ -162,34 +150,19 @@ class Mission(object):
         :param label: Label of the object descending
         :return: None
         """
-        x = self.time
-        y = self.path[:, 0]
+        x = self.results.time[0]
+        y = self.results.path[0][:, 0]
         plt.scatter(self.time_lim, 0, label="Time limit")
-        plt.scatter(self.tf, 0, c="BLACK", marker="x")
+        plt.scatter(self.results.time[0][-1], 0, c="BLACK", marker="x")
         plt.plot(x, y, label=label)
         plt.title("Altitude Plot")
         plt.xlabel("Time (sec)")
         plt.ylabel("Altitude (ft)")
 
-    def plot_vel(self, label=""):
-        """
-        Plots velocity over time of descent
-        :param label: Label of the object descending
-        :return: None
-        """
-        x = self.time
-        y = -self.path[:, 1]
-        plt.scatter(self.tf, self.ke2vel(self.ke_lim, self.mass[-1]), label="Velocity limit")
-        plt.scatter(self.tf, -self.yf[1], c="BLACK", marker="x")
-        plt.plot(x, y, label=label)
-        plt.title("Velocity Plot")
-        plt.xlabel("Time (sec)")
-        plt.ylabel("Velocity (ft/s)")
-
     @staticmethod
     def rk4(yn, f, h):
         """
-        Runge-Kutta 4 integrator which integrates over the time step h
+        Runge-Kutta 4 integrator which integrates over the constant time step h
         :param yn: the current state vector
         :param f: The function for the state vector that takes the current state vector as the input
         :param h: Time step to integrate over
@@ -225,3 +198,39 @@ class Mission(object):
         :return: velocity
         """
         return np.sqrt(ke*2.0/m)
+
+# TODO: Remake this
+#     def results(self, name="", **kwargs):
+#         """
+#         This returns the results of the mission that was evaluated using run_mission()
+#         :param name: name of the section being simulated
+#         :param kwargs:
+#             mass: list of masses (this is if a section was split but tethered)
+#         :return:
+#         """
+#         print("-------------------- {0:s} --------------------".format(str(name)))
+#         print("Time of descent: {0:.2f}".format(self.tf))
+#         try:
+#             over_time = min(np.where(self.time > self.time_lim)[0])
+#             print("*** Altitude where max time is exceeded: {0:.2f} ft ***".format(self.path[over_time, self.__as]))
+#         except ValueError:
+#             pass
+#         print("Velocity of final descent: {0:.2f} ft/s".format(abs(self.yf[1])))
+#         if 'masses' in kwargs:
+#             i = 0
+#             for m in kwargs["masses"]:
+#                 i += 1
+#                 ke = self.kinetic_energy(self.yf[1], m)
+#                 print("Kinetic Energy section {0} on touchdown: {1:.2f} ft lbs".format(i, ke))
+#                 if ke > self.ke_lim:
+#                     print("*** Kinetic energy section {0} Exceeded by: {1:.2f} ft lbs ***".format(i, ke - self.ke_lim))
+#         else:
+#             print("Kinetic Energy on touchdown: {0:.2f} ft lbs".format(self.ke))
+#             if self.ke > self.ke_lim:
+#                 print("*********************************************")
+#                 print("Kinetic energy Exceeded by: {0:.2f} ft lbs".format(self.ke - self.ke_lim))
+#                 print("*********************************************")
+#         print()
+#         return
+
+

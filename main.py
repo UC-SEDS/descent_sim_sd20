@@ -4,9 +4,6 @@ from setup.payload_setup import payload_setup
 from setup.rocket_setup import rocket_setup
 import matplotlib.pyplot as plt
 
-# TODO: Test the variance of the simulation using different time steps [1.0, 0.1, 0.01, 0.001]
-# TODO: Save all data at the end of each phase including time and kinetic energy
-
 # call mission setups
 rocket_mission = rocket_setup()
 pay_mission = payload_setup()
@@ -25,16 +22,11 @@ mid_section = toslugs(17.81, 'lb')
 aft_section = toslugs(14.67 + 4.06, 'lb')
 full_pay_section = toslugs(9.34, 'lb')
 nose_section = toslugs(2.4, 'lb')
-rocket.results("Rocket", masses=[mid_section, aft_section])
-payload.results("Payload", masses=[full_pay_section, nose_section])
+# rocket.results("Rocket", masses=[mid_section, aft_section])
+# payload.results("Payload", masses=[full_pay_section, nose_section])
 
 # Plotting results
 plt.figure(1)
 rocket.plot_path("Rocket Path")
 payload.plot_path("Payload Path")
-plt.legend()
-
-plt.figure(2)
-rocket.plot_vel("Rocket Velocity")
-payload.plot_vel("Payload Velocity")
 plt.legend()
