@@ -8,7 +8,7 @@ Details: The numerical simulation uses a Runge-Kutta 4 integrator for the numeri
 conditions have been met. The breaking conditions can only be set using the state vector in the simulation. The
 simulation will save the entire run as a ndarray and has plotting capabilities to visualize the velocity and position
 over time. The simulation is currently a 1D simulation that does not take crosswind into account. ***Creating a 2D
-Simulation in the same framework would be very useful for varying testing non-uniform crosswinds***
+Simulation in the same framework would be very useful for testing non-uniform crosswinds***
 """
 import sympy as sy
 import numpy as np
@@ -24,6 +24,7 @@ class Results(object):
         self.vel = []
         self.pos_final = []
         self.vel_final = []
+        self.time_final = []
 
 
 class Mission(object):
@@ -45,6 +46,7 @@ class Mission(object):
         self.time_lim = max_time
         self.ke_lim = max_ke
         self.phase = break_alt
+        self.__split = None
 
         self.mass = masses
         for i in range(n_phases):
@@ -58,14 +60,15 @@ class Mission(object):
         the final state vector is the initial state vector for the next phase.
         :return:
         """
-        if split is not None:
+        if split is None:
             mass = self.mass
         else:
             assert isinstance(split, list), "This must be a list of ndarrays"
             for element in split:
                 assert isinstance(element, np.ndarray), "This must be a list of ndarrays"
-            assert len(split) == self.phase, "List must have the same length as the number of phases"
+            assert len(split) == self.__n, "List must have the same length as the number of phases"
             mass = split
+            self.__split = split
         y = self.__state
         time = np.array([0])
         state = y
@@ -78,12 +81,14 @@ class Mission(object):
             self.results.pos_final.append(y[-1, self.__as])
             self.results.vel_final.append(y[-1, self.__vs])
             self.results.time.append(t)
+            self.results.time_final.append(t[-1])
             self.results.ke.append(self.kinetic_energy(self.results.path[i][-1, self.__vs], mass[i]))
             time = np.append(time, t + time[-1])
             state = np.append(state, y, axis=0)
             y = y[-1, :]
         self.results.path.insert(0, state)
         self.results.time.insert(0, time)
+        self.results.time_final.insert(0, time[-1])
         self.results.pos.insert(0, self.results.path[0][:, self.__as])
         self.results.vel.insert(0, self.results.path[0][:, self.__vs])
         return state, time
@@ -199,38 +204,62 @@ class Mission(object):
         """
         return np.sqrt(ke*2.0/m)
 
-# TODO: Remake this
-#     def results(self, name="", **kwargs):
-#         """
-#         This returns the results of the mission that was evaluated using run_mission()
-#         :param name: name of the section being simulated
-#         :param kwargs:
-#             mass: list of masses (this is if a section was split but tethered)
-#         :return:
-#         """
-#         print("-------------------- {0:s} --------------------".format(str(name)))
-#         print("Time of descent: {0:.2f}".format(self.tf))
-#         try:
-#             over_time = min(np.where(self.time > self.time_lim)[0])
-#             print("*** Altitude where max time is exceeded: {0:.2f} ft ***".format(self.path[over_time, self.__as]))
-#         except ValueError:
-#             pass
-#         print("Velocity of final descent: {0:.2f} ft/s".format(abs(self.yf[1])))
-#         if 'masses' in kwargs:
-#             i = 0
-#             for m in kwargs["masses"]:
-#                 i += 1
-#                 ke = self.kinetic_energy(self.yf[1], m)
-#                 print("Kinetic Energy section {0} on touchdown: {1:.2f} ft lbs".format(i, ke))
-#                 if ke > self.ke_lim:
-#                     print("*** Kinetic energy section {0} Exceeded by: {1:.2f} ft lbs ***".format(i, ke - self.ke_lim))
-#         else:
-#             print("Kinetic Energy on touchdown: {0:.2f} ft lbs".format(self.ke))
-#             if self.ke > self.ke_lim:
-#                 print("*********************************************")
-#                 print("Kinetic energy Exceeded by: {0:.2f} ft lbs".format(self.ke - self.ke_lim))
-#                 print("*********************************************")
-#         print()
-#         return
-
-
+    def display(self, table, title="obj", append=False, **kwargs):
+        if "dec" in kwargs:
+            dec = kwargs["dec"]
+        else:
+            dec = 2
+        if table == "drift":
+            wind_speeds = [0, 5, 10, 15, 20]
+            descent_time = self.results.time_final[0]
+            drift_distance = [round(1.466667*wind*descent_time, dec) for wind in wind_speeds]
+            row_format = "{:>10}" * (len(wind_speeds) + 1)
+            if not append:
+                print("Drift Due to Wind (ft)")
+                print(row_format.format("", *wind_speeds))
+            print(row_format.format(title, *drift_distance))
+        elif table == "velocity":
+            vel = [round(abs(v), dec) for v in self.results.vel_final]
+            fz = "Phase "
+            phases = [fz+str(i+1) for i in range(self.__n)]
+            row_format = "{:>10}" * (len(phases) + 1)
+            if not append:
+                print("Max Descent Velocity (ft/s)")
+                print(row_format.format("", *phases))
+            print(row_format.format(title, *vel))
+        elif table == "time":
+            time = [t for t in self.results.time_final]
+            fz = "Phase "
+            phases = [fz+str(i+1) for i in range(self.__n)]
+            phases.insert(0, "Total")
+            row_format = "{:>10}" * (len(phases) + 1)
+            if not append:
+                print("Time for Descent (s)")
+                print(row_format.format("", *phases))
+            print(row_format.format(title, *time))
+        elif table == "ke":
+            if isinstance(self.results.ke[0], np.ndarray):
+                splits = len(self.results.ke[0])
+                ke = []
+                for s in range(splits):
+                    row = []
+                    for phase in self.results.ke:
+                        row.append(round(phase[s], dec))
+                    ke.append(row)
+            if self.__split is not None:
+                if "sections" in kwargs:
+                    mass_names = kwargs["sections"]
+                else:
+                    mass_names = ["Mass"+str(i+1) for i in range(len(self.__split))]
+            else:
+                mass_names = title
+            fz = "Phase "
+            phases = [fz+str(i+1) for i in range(self.__n)]
+            row_format = "{:>10}" * (len(phases) + 1)
+            if not append:
+                print("Kinetic Energy (ft lbs)")
+                print(row_format.format("", *phases))
+            for i, row in enumerate(ke):
+                print(row_format.format(mass_names[i], *row))
+        else:
+            assert False, "Invalid display table\nYou entered \"{0}\"\nOptions: drift, velocity, time, ke".format(table)
