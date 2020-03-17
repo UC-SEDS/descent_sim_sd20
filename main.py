@@ -4,9 +4,6 @@ from setup_files.rocket_post_build_space_jam import rocket_setup, payload_setup
 import matplotlib.pyplot as plt
 import numpy as np
 
-# call mission setups
-
-
 # setup_files the missions class for each independent section
 rocket = Mission(rocket_setup)
 payload = Mission(payload_setup)
@@ -30,6 +27,7 @@ rocket.plot_path("Rocket Path")
 payload.plot_path("Payload Path")
 plt.legend()
 
+# Printing tables for results
 rocket.display('drift')
 payload.display('drift', append=True)
 print()
