@@ -1,9 +1,10 @@
-from setup.mission_chutes import parachutes
+from setup_files.mission_chutes import parachutes
 import numpy as np
 from tools import toslugs
 
 
 def payload_setup():
+    name = "Payload"
     # Constraints
     max_ke = 75.0  # ft lbs
     max_time = 90.0  # sec
@@ -25,4 +26,4 @@ def payload_setup():
     mass = [m_pay, m_pay]#, m_pay_empty]  # mass for each phase
     bc = [600.0, 0.0]# 400, 0.0]  # altitude breaking conditions
     chutes = [fall, pay]#, pay]  # parachute used for each phase
-    return [phases, initial_state, dt, bc, mass, chutes, max_time, max_ke]
+    return [name, phases, initial_state, dt, bc, mass, chutes, max_time, max_ke]

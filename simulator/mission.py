@@ -35,22 +35,20 @@ class Mission(object):
         are achieved. The method run_mission() is called after initialization of the Mission class.
         :param mission: list of initial parameters that is returned by running the function in XXX_setup.py.
         """
-        n_phases, initial_state, time_step, break_alt, masses, chutes, max_time, max_ke = mission
-        assert n_phases == len(break_alt) == len(masses)
         self.__as = 0
         self.__vs = 1
         self.__equ = []
-        self.__state = initial_state
-        self.__n = n_phases
-        self.dt = time_step
-        self.time_lim = max_time
-        self.ke_lim = max_ke
-        self.phase = break_alt
+        self.__state = mission.initial_state
+        self.__n = mission.n
         self.__split = None
-
-        self.mass = masses
-        for i in range(n_phases):
-            self.__equ.append(self.make_equ(masses[i], chutes[i].S, chutes[i].cd))
+        self.title = mission.title
+        self.dt = mission.dt
+        self.time_lim = mission.max_time
+        self.ke_lim = mission.max_ke
+        self.phase = mission.bc
+        self.mass = mission.masses
+        for i in range(self.__n):
+            self.__equ.append(self.make_equ(mission.masses[i], mission.chutes[i].S, mission.chutes[i].cd))
         self.results = Results()
 
     def run_mission(self, split=None):
@@ -204,7 +202,7 @@ class Mission(object):
         """
         return np.sqrt(ke*2.0/m)
 
-    def display(self, table, title="obj", append=False, **kwargs):
+    def display(self, table, append=False, **kwargs):
         if "dec" in kwargs:
             dec = kwargs["dec"]
         else:
@@ -217,7 +215,7 @@ class Mission(object):
             if not append:
                 print("Drift Due to Wind (ft)")
                 print(row_format.format("", *wind_speeds))
-            print(row_format.format(title, *drift_distance))
+            print(row_format.format(self.title, *drift_distance))
         elif table == "velocity":
             vel = [round(abs(v), dec) for v in self.results.vel_final]
             fz = "Phase "
@@ -226,7 +224,7 @@ class Mission(object):
             if not append:
                 print("Max Descent Velocity (ft/s)")
                 print(row_format.format("", *phases))
-            print(row_format.format(title, *vel))
+            print(row_format.format(self.title, *vel))
         elif table == "time":
             time = [t for t in self.results.time_final]
             fz = "Phase "
@@ -236,7 +234,7 @@ class Mission(object):
             if not append:
                 print("Time for Descent (s)")
                 print(row_format.format("", *phases))
-            print(row_format.format(title, *time))
+            print(row_format.format(self.title, *time))
         elif table == "ke":
             if isinstance(self.results.ke[0], np.ndarray):
                 splits = len(self.results.ke[0])
@@ -252,7 +250,7 @@ class Mission(object):
                 else:
                     mass_names = ["Mass"+str(i+1) for i in range(len(self.__split))]
             else:
-                mass_names = title
+                mass_names = self.title
             fz = "Phase "
             phases = [fz+str(i+1) for i in range(self.__n)]
             row_format = "{:>10}" * (len(phases) + 1)

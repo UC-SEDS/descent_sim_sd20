@@ -1,9 +1,10 @@
-from setup.mission_chutes import parachutes
+from setup_files.mission_chutes import parachutes
 import numpy as np
 from tools import toslugs
 
 
 def rocket_setup():
+    name = "Rocket"
     # import parachutes
     drogue = parachutes['24']
     main = parachutes['certXXL']
@@ -22,4 +23,4 @@ def rocket_setup():
     mass = [rocket, rocket]  # mass for each phase
     bc = [600.0, 0.0]  # altitude breaking conditions
     chutes = [drogue, main]  # parachute used for each phase
-    return [phases, initial_state, dt, bc, mass, chutes, max_time, max_ke]
+    return [name, phases, initial_state, dt, bc, mass, chutes, max_time, max_ke]

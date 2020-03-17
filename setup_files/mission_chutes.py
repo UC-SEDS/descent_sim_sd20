@@ -1,4 +1,4 @@
-from sim_classes import chute
+from simulator import chute
 from tools import tofeet, toslugs
 
 g = 32.17405
